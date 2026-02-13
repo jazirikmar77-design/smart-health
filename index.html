@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Health Ultimate</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:linear-gradient(to right,#e0fbfc,#edf6f9);
+    text-align:center;
+    transition:0.5s;
+}
+
+.dark{
+    background:#121212;
+    color:white;
+}
+
+header{
+    background:#006d77;
+    color:white;
+    padding:20px;
+}
+
+button{
+    padding:10px 20px;
+    margin:10px;
+    border:none;
+    border-radius:8px;
+    background:#006d77;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#023047;
+}
+
+.box{
+    background:white;
+    width:350px;
+    margin:20px auto;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+.dark .box{
+    background:#1e1e1e;
+}
+
+input{
+    padding:10px;
+    width:90%;
+    margin:10px;
+}
+
+.hidden{
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🏥 Smart Health Ultimate</h1>
+<button onclick="toggleDark()">🌙 Dark Mode</button>
+<p id="welcome"></p>
+<p id="pointsDisplay"></p>
+<p id="badge"></p>
+</header>
+
+<div id="login">
+<div class="box">
+<h2>Login</h2>
+<input type="text" id="username" placeholder="Enter your name">
+<button onclick="login()">Start</button>
+</div>
+</div>
+
+<div id="main" class="hidden">
+
+<div class="box">
+<h2>BMI Calculator</h2>
+<input type="number" id="weight" placeholder="Weight (kg)">
+<input type="number" id="height" placeholder="Height (m)">
+<button onclick="calculateBMI()">Calculate BMI</button>
+<p id="bmiResult"></p>
+</div>
+
+<div class="box">
+<h2>Water Calculator</h2>
+<input type="number" id="waterWeight" placeholder="Weight (kg)">
+<button onclick="calculateWater()">Calculate Water</button>
+<p id="waterResult"></p>
+</div>
+
+<div class="box">
+<h2>Health Quiz</h2>
+<p>Best food for health?</p>
+<button onclick="quiz(1)">Burger</button>
+<button onclick="quiz(2)">Vegetables</button>
+<button onclick="quiz(3)">Candy</button>
+<p id="quizResult"></p>
+</div>
+
+<div class="box">
+<h2>BMI Progress Chart</h2>
+<canvas id="bmiChart"></canvas>
+</div>
+
+</div>
+
+<script>
+let points = localStorage.getItem("points") || 0;
+let bmiHistory = JSON.parse(localStorage.getItem("bmiHistory")) || [];
+
+document.getElementById("pointsDisplay").innerText="Points: "+points;
+
+function login(){
+    let name=document.getElementById("username").value;
+    if(name!=""){
+        localStorage.setItem("username", name);
+        document.getElementById("welcome").innerText="Welcome "+name+" 👋";
+        document.getElementById("login").classList.add("hidden");
+        document.getElementById("main").classList.remove("hidden");
+        loadChart();
+    }
+}
+
+function calculateBMI(){
+    let w=document.getElementById("weight").value;
+    let h=document.getElementById("height").value;
+    let bmi=(w/(h*h)).toFixed(2);
+
+    document.getElementById("bmiResult").innerText="Your BMI: "+bmi;
+
+    bmiHistory.push(bmi);
+    localStorage.setItem("bmiHistory", JSON.stringify(bmiHistory));
+
+    addPoints(10);
+    loadChart();
+}
+
+function calculateWater(){
+    let w=document.getElementById("waterWeight").value;
+    let water=(w*0.033).toFixed(2);
+    document.getElementById("waterResult").innerText="Drink "+water+" L daily";
+    addPoints(5);
+}
+
+function quiz(a){
+    if(a==2){
+        document.getElementById("quizResult").innerText="Correct!";
+        addPoints(20);
+    }else{
+        document.getElementById("quizResult").innerText="Wrong!";
+    }
+}
+
+function addPoints(p){
+    points=parseInt(points)+p;
+    localStorage.setItem("points", points);
+    document.getElementById("pointsDisplay").innerText="Points: "+points;
+    updateBadge();
+}
+
+function updateBadge(){
+    if(points>=100){
+        document.getElementById("badge").innerText="🏆 Health Master!";
+    }else if(points>=50){
+        document.getElementById("badge").innerText="🥈 Health Pro!";
+    }else{
+        document.getElementById("badge").innerText="🥉 Beginner";
+    }
+}
+
+function toggleDark(){
+    document.body.classList.toggle("dark");
+}
+
+function loadChart(){
+    let ctx=document.getElementById("bmiChart").getContext("2d");
+    new Chart(ctx,{
+        type:"line",
+        data:{
+            labels:bmiHistory.map((_,i)=>"Try "+(i+1)),
+            datasets:[{
+                label:"BMI Progress",
+                data:bmiHistory,
+                borderColor:"#006d77",
+                fill:false
+            }]
+        }
+    });
+}
+
+window.onload=function(){
+    let savedName=localStorage.getItem("username");
+    if(savedName){
+        document.getElementById("welcome").innerText="Welcome "+savedName+" 👋";
+        document.getElementById("login").classList.add("hidden");
+        document.getElementById("main").classList.remove("hidden");
+        loadChart();
+    }
+    updateBadge();
+}
+</script>
+
+</body>
+</html>
